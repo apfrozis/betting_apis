@@ -11,6 +11,9 @@ var cheerio = require('cheerio');
 const url = 'https://www.hltv.org/matches'
 
 request(url, function (error, response, body) {
-var $ = cheerio.load(body);
-debugger;
+    var $ = cheerio.load(body);
+    debugger;
+    for (var j = 0; j < matches.length; j++) {
+        let link_for_next_request = matches[j]['attribs']['href']
+    }
 })
