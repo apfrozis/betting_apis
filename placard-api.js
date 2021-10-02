@@ -12,13 +12,13 @@ const url = 'https://www.hltv.org'
 
 const matches_url = '/matches'
 
-bet_websites_classes = ['gprov_gv4nx914', 'gprov_3etkx6rj', 'gprov_nz6cnayl',
-'gprov_egb', 'gprov_p2g0jzml', 'gprov_5i4rhap1',
-'gprov_pinnacle', 'gprov_buff88', 'gprov_parimatch',
-'gprov_uazy6czn', 'gprov_vulkan', 'gprov_midnite',
-'gprov_csgoempire', 'gprov_mobiusbet', 'gprov_vz0pxwkq',
-'gprov_comeon', 'gprov_n1bet', 'gprov_22bet',
-'gprov_bet20', 'gprov_cyberbet', 'gprov_bitcasino']
+bet_websites_classes = [{name: 'ggbet', class: 'gprov_gv4nx914'}, {name: 'bet365', class: 'gprov_3etkx6rj'}, {name: 'lootbet', class: 'gprov_nz6cnayl'},
+{name: 'egb', class: 'gprov_egb'}, {name: 'thunderpick', class: 'gprov_thunderpick'}, {name: 'betway', class: 'gprov_p2g0jzml'}, {name: '1xbet', class: 'gprov_5i4rhap1'},
+{name: 'pinnacle', class: 'gprov_pinnacle'}, {name: 'buffbet', class: 'gprov_buff88'}, {name: 'parimatch', class: 'gprov_parimatch'},
+{name: 'betwinner', class: 'gprov_uazy6czn'}, {name: 'vulkan', class: 'gprov_vulkan'}, {name: 'midnite', class: 'gprov_midnite'},
+{name: 'csgoempire', class: 'gprov_csgoempire'}, {name: 'mobius', class: 'gprov_mobiusbet'}, {name: 'unibet', class: 'gprov_vz0pxwkq'},
+{name: 'comeon', class: 'gprov_comeon'}, {name: 'n1 bet', class: 'gprov_n1bet'}, {name: '22 bet', class: 'gprov_22bet'},
+{name: 'bet20', class: 'gprov_bet20'}, {name: 'cyberbet', class: 'gprov_cyberbet'}, {name: 'bitcasino', class: 'gprov_bitcasino'}]
 
 visitPage(url + matches_url, function (body) {
     var $ = cheerio.load(body);
@@ -28,18 +28,46 @@ visitPage(url + matches_url, function (body) {
         let link_for_next_request = matches[0]['attribs']['href']
         visitPage(url + link_for_next_request, function (body) {
             var $ = cheerio.load(body);
+            let first_team_name = $('.team-cell')[0].children[0].data
+            let second_team_name = $('.team-cell')[2].children[0].data
+            let biggest_first_odd_and_provider = {biggest_odd: 0, provider: ''}
+            let biggest_second_odd_and_provider = {biggest_odd: 0, provider: ''}
+            let cs_game = {first_team_name: first_team_name, second_team_name: second_team_name, cs_odds_list: []}
             for (var bet_class_index = 0; bet_class_index < bet_websites_classes.length; bet_class_index++) {
-                let odd = $('.' + bet_websites_classes[bet_class_index] + '.provider')
-                stat[0].children[3].children[0].children[0].data
-                stat[0].children[7].children[0].children[0].data
+                let odd_div = $('.' + bet_websites_classes[bet_class_index]['class'] + '.provider')
+                let first_odd = 0
+                let second_odd = 0
+                try {
+                    first_odd = odd_div[0].children[3].children[0].children[0].data
+                    second_odd = odd_div[0].children[7].children[0].children[0].data
+                } catch {
+                    first_odd = 0
+                    second_odd = 0
+                }
+                if (first_odd > biggest_first_odd_and_provider['biggest_odd']) {
+                    biggest_first_odd_and_provider['biggest_odd'] = first_odd
+                    biggest_first_odd_and_provider['provider'] = bet_websites_classes[bet_class_index]['class']
+                }
+                if (second_odd > biggest_second_odd_and_provider['biggest_odd']) {
+                    biggest_second_odd_and_provider['biggest_odd'] = second_odd
+                    biggest_second_odd_and_provider['provider'] = bet_websites_classes[bet_class_index]['class']
+                }
+                cs_game['cs_odds_list'].push({provider: bet_websites_classes[bet_class_index]['name'], first_odd: first_odd, second_odd: second_odd})
             }
-
+            calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider)
             debugger;
         })
     //}
 })
 
-
+function calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider) {
+    debugger;
+    let percentage = 1/biggest_first_odd_and_provider['biggest_odd'] + 1/biggest_second_odd_and_provider['biggest_odd']
+    if(percentage < 0.8) {
+        return true
+    }
+    return false
+}
 
 
 function visitPage(url, callback) {
