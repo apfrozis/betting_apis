@@ -1,5 +1,6 @@
 var request = require('request');
 var cheerio = require('cheerio');
+var mysql = require('mysql');
 
 /*const placard = require('placard-api');
 
@@ -14,7 +15,7 @@ const AMOUNT_AVAILABLE = 100
 
 const matches_url = '/matches'
 
-bet_websites_classes = [{name: 'ggbet', class: 'gprov_gv4nx914'}, {name: 'bet365', class: 'gprov_3etkx6rj'}, {name: 'lootbet', class: 'gprov_nz6cnayl'},
+const bet_websites_classes = [{name: 'ggbet', class: 'gprov_gv4nx914'}, {name: 'bet365', class: 'gprov_3etkx6rj'}, {name: 'lootbet', class: 'gprov_nz6cnayl'},
 {name: 'egb', class: 'gprov_egb'}, {name: 'thunderpick', class: 'gprov_thunderpick'}, {name: 'betway', class: 'gprov_p2g0jzml'}, {name: '1xbet', class: 'gprov_5i4rhap1'},
 {name: 'pinnacle', class: 'gprov_pinnacle'}, {name: 'buffbet', class: 'gprov_buff88'}, {name: 'parimatch', class: 'gprov_parimatch'},
 {name: 'betwinner', class: 'gprov_uazy6czn'}, {name: 'vulkan', class: 'gprov_vulkan'}, {name: 'midnite', class: 'gprov_midnite'},
@@ -22,7 +23,14 @@ bet_websites_classes = [{name: 'ggbet', class: 'gprov_gv4nx914'}, {name: 'bet365
 {name: 'comeon', class: 'gprov_comeon'}, {name: 'n1 bet', class: 'gprov_n1bet'}, {name: '22 bet', class: 'gprov_22bet'},
 {name: 'bet20', class: 'gprov_bet20'}, {name: 'cyberbet', class: 'gprov_cyberbet'}, {name: 'bitcasino', class: 'gprov_bitcasino'}]
 
-visitPage(url + matches_url, function (body) {
+var con = mysql.createConnection({
+    host: "eu-cdbr-west-01.cleardb.com",
+    user: "bfa556a9934796",
+    password: "da9d7209",
+    database: "heroku_98a5fdc87d62a3c"
+  });
+
+visitPage(url + matches_url, async function (body) {
     var $ = cheerio.load(body);
     let matches = $('.match.a-reset')
     //for (var j = 0; j < matches.length; j++) {
@@ -56,11 +64,26 @@ visitPage(url + matches_url, function (body) {
                 }
                 cs_game['cs_odds_list'].push({provider: bet_websites_classes[bet_class_index]['name'], first_odd: first_odd, second_odd: second_odd})
             }
-            calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider)
+            let arbitrage_betting = calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider)
+            cs_game = Object.assign({}, cs_game, arbitrage_betting)
+            save_to_database(cs_game)
             debugger;
         })
     //}
 })
+
+function save_to_database(cs_game) {
+    con.connect(function(err) {
+        if (err) throw err;
+        console.log("Connected!");
+        console.log(cs_game);
+        var sql = "INSERT INTO customers (name, address) VALUES ('Company Inc', 'Highway 37')";
+        con.query(sql, function (err, result) {
+          if (err) throw err;
+          console.log("1 record inserted");
+        });
+      });
+}
 
 function calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider) {
     let first_betting_percentage = 1 / biggest_first_odd_and_provider['biggest_odd'] * 100

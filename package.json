@@ -4,16 +4,19 @@
   "description": "node app ",
   "main": "app.js",
   "scripts": {
-  "start": "node placard-api.js"
-},
+    "start": "node placard-api.js"
+  },
   "repository": {
-  "type": "git",
-  "url": ""
-},
+    "type": "git",
+    "url": ""
+  },
   "author": "",
   "license": "ISC",
   "bugs": {
-  "url": ""
-},
-  "homepage": ""
+    "url": ""
+  },
+  "homepage": "",
+  "dependencies": {
+    "mysql": "^2.18.1"
+  }
 }
