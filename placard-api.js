@@ -10,6 +10,8 @@ var cheerio = require('cheerio');
 */
 const url = 'https://www.hltv.org'
 
+const AMOUNT_AVAILABLE = 100
+
 const matches_url = '/matches'
 
 bet_websites_classes = [{name: 'ggbet', class: 'gprov_gv4nx914'}, {name: 'bet365', class: 'gprov_3etkx6rj'}, {name: 'lootbet', class: 'gprov_nz6cnayl'},
@@ -23,8 +25,8 @@ bet_websites_classes = [{name: 'ggbet', class: 'gprov_gv4nx914'}, {name: 'bet365
 visitPage(url + matches_url, function (body) {
     var $ = cheerio.load(body);
     let matches = $('.match.a-reset')
-    debugger;
     //for (var j = 0; j < matches.length; j++) {
+        await delay(5000)
         let link_for_next_request = matches[0]['attribs']['href']
         visitPage(url + link_for_next_request, function (body) {
             var $ = cheerio.load(body);
@@ -61,9 +63,17 @@ visitPage(url + matches_url, function (body) {
 })
 
 function calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider) {
+    let first_betting_percentage = 1 / biggest_first_odd_and_provider['biggest_odd'] * 100
+    let second_betting_percentage = 1 / biggest_second_odd_and_provider['biggest_odd'] * 100
+    let percentage = (first_betting_percentage + second_betting_percentage)
     debugger;
-    let percentage = 1/biggest_first_odd_and_provider['biggest_odd'] + 1/biggest_second_odd_and_provider['biggest_odd']
-    if(percentage < 0.8) {
+    if(percentage < 98) {
+        let amount_to_bet_first = (AMOUNT_AVAILABLE * first_betting_percentage) / percentage
+        let amount_to_bet_second = (AMOUNT_AVAILABLE * second_betting_percentage) / percentage
+
+        let profit_first = (amount_to_bet_first * biggest_first_odd_and_provider['biggest_odd']) - amount_to_bet_second - amount_to_bet_first
+        let profit_second = (amount_to_bet_second * biggest_second_odd_and_provider['biggest_odd']) - amount_to_bet_first - amount_to_bet_second
+        debugger;
         return true
     }
     return false
