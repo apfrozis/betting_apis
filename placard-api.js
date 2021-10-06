@@ -43,36 +43,40 @@ visitPage(url + matches_url, async function (body) {
         let link_for_next_request = matches[j]['attribs']['href']
         visitPage(url + link_for_next_request, function (body) {
             var $ = cheerio.load(body);
-            let first_team_name = $('.team-cell')[0].children[0].data
-            let second_team_name = $('.team-cell')[2].children[0].data
-            let game_date = $('.date')[0].children[0].data
-            let biggest_first_odd_and_provider = {biggest_odd: 0, provider: ''}
-            let biggest_second_odd_and_provider = {biggest_odd: 0, provider: ''}
-            let cs_game = {first_team_name: first_team_name, second_team_name: second_team_name, cs_odds_list: [], game_date: game_date}
-            for (var bet_class_index = 0; bet_class_index < bet_websites_classes.length; bet_class_index++) {
-                let odd_div = $('.' + bet_websites_classes[bet_class_index]['class'] + '.provider')
-                let first_odd = 0
-                let second_odd = 0
-                try {
-                    first_odd = odd_div[0].children[3].children[0].children[0].data
-                    second_odd = odd_div[0].children[7].children[0].children[0].data
-                } catch {
-                    first_odd = 0
-                    second_odd = 0
+            try {
+                let first_team_name = $('.team-cell')[0].children[0].data
+                let second_team_name = $('.team-cell')[2].children[0].data
+                let game_date = $('.date')[0].children[0].data
+                let biggest_first_odd_and_provider = {biggest_odd: 0, provider: ''}
+                let biggest_second_odd_and_provider = {biggest_odd: 0, provider: ''}
+                let cs_game = {first_team_name: first_team_name, second_team_name: second_team_name, cs_odds_list: [], game_date: game_date}
+                for (var bet_class_index = 0; bet_class_index < bet_websites_classes.length; bet_class_index++) {
+                    let odd_div = $('.' + bet_websites_classes[bet_class_index]['class'] + '.provider')
+                    let first_odd = 0
+                    let second_odd = 0
+                    try {
+                        first_odd = odd_div[0].children[3].children[0].children[0].data
+                        second_odd = odd_div[0].children[7].children[0].children[0].data
+                    } catch {
+                        first_odd = 0
+                        second_odd = 0
+                    }
+                    if (parseFloat(first_odd) > parseFloat(biggest_first_odd_and_provider['biggest_odd'])) {
+                        biggest_first_odd_and_provider['biggest_odd'] = first_odd
+                        biggest_first_odd_and_provider['provider'] = bet_websites_classes[bet_class_index]['name']
+                    }
+                    if (parseFloat(second_odd) > parseFloat(biggest_second_odd_and_provider['biggest_odd'])) {
+                        biggest_second_odd_and_provider['biggest_odd'] = second_odd
+                        biggest_second_odd_and_provider['provider'] = bet_websites_classes[bet_class_index]['name']
+                    }
+                    cs_game['cs_odds_list'].push({provider: bet_websites_classes[bet_class_index]['name'], first_odd: first_odd, second_odd: second_odd})
                 }
-                if (first_odd > biggest_first_odd_and_provider['biggest_odd']) {
-                    biggest_first_odd_and_provider['biggest_odd'] = first_odd
-                    biggest_first_odd_and_provider['provider'] = bet_websites_classes[bet_class_index]['name']
-                }
-                if (second_odd > biggest_second_odd_and_provider['biggest_odd']) {
-                    biggest_second_odd_and_provider['biggest_odd'] = second_odd
-                    biggest_second_odd_and_provider['provider'] = bet_websites_classes[bet_class_index]['name']
-                }
-                cs_game['cs_odds_list'].push({provider: bet_websites_classes[bet_class_index]['name'], first_odd: first_odd, second_odd: second_odd})
+                let arbitrage_betting = calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider)
+                cs_game = Object.assign({}, cs_game, arbitrage_betting)
+                save_to_database(cs_game)
+            } catch {
+
             }
-            let arbitrage_betting = calculate_arbitrage_betting(biggest_first_odd_and_provider, biggest_second_odd_and_provider)
-            cs_game = Object.assign({}, cs_game, arbitrage_betting)
-            save_to_database(cs_game)
         })
     }
     //con.end()
